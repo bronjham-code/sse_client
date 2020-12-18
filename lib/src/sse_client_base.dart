@@ -55,6 +55,12 @@ class SSE {
               _cachedata += _decData;
             }
           });
+        } else if ([204].contains(res.statusCode) ||
+            res.headers.contentType.toString().toLowerCase() !=
+                'text/event-stream') {
+          close();
+        } else {
+          _reconnect();
         }
       });
     }, onError: () => _reconnect());

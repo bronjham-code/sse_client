@@ -32,7 +32,7 @@ main(List<String> args) {
       Timer.periodic(
           Duration(seconds: 2),
           (Timer timer) => httpRequest.response.write(
-              'data:hello<${DateTime.now().millisecond}>\nid:${DateTime.now().second}\n\n'));
+              'data:hello<${DateTime.now().millisecondsSinceEpoch}>\nid:${DateTime.now().second}\n\n'));
     });
     sse.connect();
   });
