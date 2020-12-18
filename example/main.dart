@@ -9,9 +9,19 @@ main(List<String> args) {
   var retry = Duration(seconds: 10);
   SSE sse = SSE(hostUri, retry: retry);
   sse.onChangeState.listen((int state) {
-    print(state);
+    switch (state) {
+      case 0:
+        print('State: Connecting');
+        break;
+      case 1:
+        print('State: Connected');
+        break;
+      case 2:
+        print('State: Closed');
+        break;
+    }
   });
-  sse.onReciveMessage.listen((Message message) => print(message.toJson()));
+  sse.onMessage.listen((Message message) => print(message.toJson()));
 
   HttpServer.bind('localhost', 80).then((HttpServer httpServer) {
     httpServer.listen((HttpRequest httpRequest) {
@@ -22,7 +32,7 @@ main(List<String> args) {
       Timer.periodic(
           Duration(seconds: 2),
           (Timer timer) => httpRequest.response.write(
-              'data: hello world${DateTime.now().millisecondsSinceEpoch}\n\n'));
+              'data:hello<${DateTime.now().millisecond}>\nid:${DateTime.now().second}\n\n'));
     });
     sse.connect();
   });

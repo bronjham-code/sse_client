@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../sse_client.dart';
-import '../sse_client.dart';
-import '../sse_client.dart';
 
 /// Server Sent Events class
 class SSE {
@@ -15,7 +13,8 @@ class SSE {
   HttpClient _httpClient;
 
   StreamController<int> _onChangeState = StreamController<int>();
-  StreamController<Message> _onReciveMessage = StreamController<Message>();
+  StreamController<Message> _onMessage = StreamController<Message>();
+  StreamController<dynamic> _onError = StreamController<dynamic>();
 
   SSE(this.uri, {String lastEventId, Duration retry}) {
     if (retry != null && retry != 0) {
@@ -39,6 +38,7 @@ class SSE {
       if (_lastEventId != null && _lastEventId.isNotEmpty) {
         req.headers.set('Last-Event-ID', _lastEventId);
       }
+      String _cachedata = '';
       req.close().then((HttpClientResponse res) {
         if (res.statusCode == 200 &&
             res.headers.contentType != null &&
@@ -46,7 +46,14 @@ class SSE {
                 'text/event-stream') {
           _setState(ReadyState.open);
           res.listen((List<int> data) {
-            print(utf8.decode(data));
+            var _decData = utf8.decode(data);
+            if (RegExp(r'.*\n\n$').hasMatch(_decData)) {
+              _cachedata += _decData;
+              _parse(_cachedata);
+              _cachedata = '';
+            } else {
+              _cachedata += _decData;
+            }
           });
         }
       });
@@ -56,6 +63,38 @@ class SSE {
   void close() {
     _httpClient.close();
     _setState(ReadyState.closed);
+  }
+
+  void _parse(String data) {
+    data.split('\n\n').forEach((element) {
+      String __id;
+      String __event;
+      String __data;
+      Duration __retry;
+      if (element.contains('\n')) {
+        element.split('\n').forEach((value) {
+          if (RegExp(r'id:.*$').hasMatch(value)) {
+            __id = value.replaceFirst('id:', '');
+          } else if (RegExp(r'event:.*$').hasMatch(value)) {
+            __event = value.replaceFirst('event:', '');
+          } else if (RegExp(r'data:.*$').hasMatch(value)) {
+            if (__data == null) __data = '';
+            __data += value.replaceFirst('data:', '');
+          } else if (RegExp(r'retry:.*$').hasMatch(value)) {
+            __retry = Duration(
+                milliseconds: int.parse(value.replaceFirst('retry:', ''),
+                    onError: (String val) => 0));
+          }
+        });
+        if (__retry != null && __retry.inMilliseconds != 0) _retry = __retry;
+        if ((__id != null && __id.isNotEmpty) ||
+            (__event != null && __event.isNotEmpty) ||
+            (__data != null && __data.isNotEmpty)) {
+          _onMessage.add(new Message(__id, __event, __data));
+        }
+        if (__id != null && __id.isNotEmpty) _lastEventId = __id;
+      }
+    });
   }
 
   void _reconnect() {
@@ -69,7 +108,8 @@ class SSE {
   }
 
   Stream<int> get onChangeState => _onChangeState.stream;
-  Stream<Message> get onReciveMessage => _onReciveMessage.stream;
+  Stream<Message> get onMessage => _onMessage.stream;
+  Stream<dynamic> get onError => _onError.stream;
   Duration get retry => _retry;
   int get readyState => _readyState;
   String get lastEventId => _lastEventId;
