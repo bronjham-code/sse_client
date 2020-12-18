@@ -1,0 +1,14 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "sse_client",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "2.8"
+    }
+  ],
+  "generated": "2020-12-18T08:03:43.909241Z",
+  "generator": "pub",
+  "generatorVersion": "2.10.3"
+}

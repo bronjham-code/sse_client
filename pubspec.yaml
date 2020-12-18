@@ -1,0 +1,13 @@
+name: sse_client
+description: This implementation allows you to send requests to DNS-over-HTTPS services.
+version: 0.1.0
+author: Skotnikov Sergei <skotnikov@europe.com>
+homepage: https://github.com/bronjham-code/sse_client
+
+environment:
+  sdk: '>=2.8.1 <3.0.0'
+
+#dependencies:
+
+#dev_dependencies:
+  #test: ^1.14.4
