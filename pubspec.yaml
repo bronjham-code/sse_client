@@ -1,7 +1,6 @@
 name: sse_client
 description: This implementation allows you to receive EventSource sent from the server.
 version: 0.1.0
-author: Skotnikov Sergei <skotnikov@europe.com>
 homepage: https://github.com/bronjham-code/sse_client
 
 environment:
