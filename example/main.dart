@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:io';
-
 import '../lib/sse_client.dart';
 
 main(List<String> args) {
@@ -22,18 +19,5 @@ main(List<String> args) {
     }
   });
   sse.onMessage.listen((Message message) => print(message.toJson()));
-
-  HttpServer.bind('localhost', 80).then((HttpServer httpServer) {
-    httpServer.listen((HttpRequest httpRequest) {
-      httpRequest.response.bufferOutput = false;
-      httpRequest.response.headers.contentType =
-          ContentType.parse('text/event-stream');
-      httpRequest.response.statusCode = 200;
-      Timer.periodic(
-          Duration(seconds: 2),
-          (Timer timer) => httpRequest.response.write(
-              'data:hello<${DateTime.now().millisecondsSinceEpoch}>\nid:${DateTime.now().second}\n\n'));
-    });
-    sse.connect();
-  });
+  sse.connect();
 }

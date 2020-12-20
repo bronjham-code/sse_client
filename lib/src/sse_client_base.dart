@@ -8,7 +8,7 @@ import '../sse_client.dart';
 class SSE {
   final Uri uri;
   Duration _retry;
-  int _readyState = 0;
+  int _readyState;
   String _lastEventId;
   HttpClient _httpClient;
 
@@ -54,7 +54,7 @@ class SSE {
             } else {
               _cachedata += _decData;
             }
-          });
+          }, onError: (e) => _reconnect(), onDone: () => _reconnect());
         } else if ([204].contains(res.statusCode) ||
             res.headers.contentType.toString().toLowerCase() !=
                 'text/event-stream') {
@@ -62,8 +62,8 @@ class SSE {
         } else {
           _reconnect();
         }
-      });
-    }, onError: () => _reconnect());
+      }, onError: (e) => _reconnect());
+    }, onError: (e) => _reconnect());
   }
 
   void close() {
@@ -105,12 +105,14 @@ class SSE {
 
   void _reconnect() {
     _setState(ReadyState.connecting);
-    connect();
+    Timer(_retry, connect);
   }
 
   void _setState(int state) {
-    _readyState = state;
-    _onChangeState.add(state);
+    if (state != _readyState) {
+      _readyState = state;
+      _onChangeState.add(state);
+    }
   }
 
   Stream<int> get onChangeState => _onChangeState.stream;
