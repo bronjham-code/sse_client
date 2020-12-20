@@ -4,19 +4,32 @@ import 'dart:io';
 
 import '../sse_client.dart';
 
-/// Server Sent Events class
+/// Server Sent Events base class
 class SSE {
+  // SSE server host
   final Uri uri;
+  //SSE reconnect timeout
   Duration _retry;
-  int _readyState;
+  //SSE current state
+  int _state;
+  //SSE last event ID
   String _lastEventId;
+  //HTTP client
   HttpClient _httpClient;
 
+  // Stream of state change
   StreamController<int> _onChangeState = StreamController<int>();
-  StreamController<Message> _onMessage = StreamController<Message>();
+  // Stream of message recive
+  StreamController<SSEMessage> _onMessage = StreamController<SSEMessage>();
+  // Stream of error recive
   StreamController<dynamic> _onError = StreamController<dynamic>();
 
   SSE(this.uri, {String lastEventId, Duration retry}) {
+    //if lastEventId is not null, set _lastEventId to lastEventId
+    if (lastEventId != null && lastEventId.isNotEmpty) {
+      _lastEventId = lastEventId;
+    }
+    //if retry is null, set retru to default 10 seconds
     if (retry != null && retry != 0) {
       _retry = retry;
     } else {
@@ -24,8 +37,9 @@ class SSE {
     }
   }
 
+  //Start SSE connect to the server
   void connect({Map<String, dynamic> headers}) {
-    _setState(ReadyState.connecting);
+    _setState(SSEState.connecting);
     if (_httpClient == null) {
       _httpClient = HttpClient();
     }
@@ -44,7 +58,7 @@ class SSE {
             res.headers.contentType != null &&
             res.headers.contentType.toString().toLowerCase() ==
                 'text/event-stream') {
-          _setState(ReadyState.open);
+          _setState(SSEState.open);
           res.listen((List<int> data) {
             var _decData = utf8.decode(data);
             if (RegExp(r'.*\n\n$').hasMatch(_decData)) {
@@ -66,11 +80,15 @@ class SSE {
     }, onError: (e) => _reconnect());
   }
 
+  //Close SSE connection if http client is not null
   void close() {
-    _httpClient.close();
-    _setState(ReadyState.closed);
+    if (_httpClient != null) {
+      _httpClient.close();
+      _setState(SSEState.closed);
+    }
   }
 
+  //Parse SSE message
   void _parse(String data) {
     data.split('\n\n').forEach((element) {
       String __id;
@@ -96,45 +114,32 @@ class SSE {
         if ((__id != null && __id.isNotEmpty) ||
             (__event != null && __event.isNotEmpty) ||
             (__data != null && __data.isNotEmpty)) {
-          _onMessage.add(new Message(__id, __event, __data));
+          _onMessage.add(new SSEMessage(__id, __event, __data));
         }
         if (__id != null && __id.isNotEmpty) _lastEventId = __id;
       }
     });
   }
 
+  //SSE reconnect use timer
   void _reconnect() {
-    _setState(ReadyState.connecting);
+    _setState(SSEState.connecting);
     Timer(_retry, connect);
   }
 
+  //Set state & send state to stream
   void _setState(int state) {
-    if (state != _readyState) {
-      _readyState = state;
+    if (state != _state) {
+      _state = state;
       _onChangeState.add(state);
     }
   }
 
+  //Getters
   Stream<int> get onChangeState => _onChangeState.stream;
-  Stream<Message> get onMessage => _onMessage.stream;
+  Stream<SSEMessage> get onMessage => _onMessage.stream;
   Stream<dynamic> get onError => _onError.stream;
   Duration get retry => _retry;
-  int get readyState => _readyState;
+  int get state => _state;
   String get lastEventId => _lastEventId;
-}
-
-class ReadyState {
-  static final int connecting = 0;
-  static final int open = 1;
-  static final int closed = 2;
-}
-
-class Message {
-  final String id;
-  final String event;
-  final String data;
-
-  Message(this.id, this.event, this.data);
-
-  Map<String, dynamic> toJson() => {'id': id, 'event': event, 'data': data};
 }

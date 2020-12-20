@@ -1,10 +1,8 @@
 import '../lib/sse_client.dart';
 
-main(List<String> args) {
-  var hostUri =
-      Uri(scheme: 'http', host: 'localhost', port: 80, path: 'example/sse/');
-  var retry = Duration(seconds: 10);
-  SSE sse = SSE(hostUri, retry: retry);
+void main(List<String> args) {
+  SSE sse = SSE(Uri(scheme: 'http', host: 'localhost', port: 80),
+      retry: Duration(seconds: 15));
   sse.onChangeState.listen((int state) {
     switch (state) {
       case 0:
@@ -18,6 +16,6 @@ main(List<String> args) {
         break;
     }
   });
-  sse.onMessage.listen((Message message) => print(message.toJson()));
+  sse.onMessage.listen((SSEMessage message) => print(message.toJson()));
   sse.connect();
 }
