@@ -1,4 +1,4 @@
-## sse_client
+## ssevents_client
 
 A library for receive EventSource sent from the server. 
 
@@ -7,7 +7,7 @@ A library for receive EventSource sent from the server.
 A simple usage example:
 
 ```dart
-import 'package:sse_client/sse_client.dart';
+import 'package:ssevents_client/ssevents_client.dart';
 
 main() async {
   SSE sse = SSE(Uri(scheme: 'http', host: 'localhost', port: 80),

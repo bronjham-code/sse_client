@@ -1,4 +1,4 @@
-import '../lib/sse_client.dart';
+import '../lib/ssevents_client.dart';
 
 void main(List<String> args) {
   SSE sse = SSE(Uri(scheme: 'http', host: 'localhost', port: 80),

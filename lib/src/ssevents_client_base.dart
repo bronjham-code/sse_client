@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../sse_client.dart';
+import '../ssevents_client.dart';
 
 /// Server Sent Events base class
 class SSE {
