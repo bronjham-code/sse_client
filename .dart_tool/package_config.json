@@ -2,13 +2,13 @@
   "configVersion": 2,
   "packages": [
     {
-      "name": "sse_client",
+      "name": "ssevents_client",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.8"
     }
   ],
-  "generated": "2020-12-21T06:53:10.487002Z",
+  "generated": "2020-12-21T06:58:34.573846Z",
   "generator": "pub",
   "generatorVersion": "2.10.3"
 }
